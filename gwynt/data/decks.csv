@@ -1,32 +1,32 @@
-faction,name,power,kind
-Northern Realms,Redanian Foot Soldier,1,unit
-Northern Realms,Poor Fucking Infantry,1,unit
-Northern Realms,Blue Stripes Commando,4,unit
-Northern Realms,Siegfried of Denesle,5,unit
-Northern Realms,Ves,5,unit
-Northern Realms,Sheldon Skaggs,4,unit
-Northern Realms,Sabrina Glevissig,4,unit
-Northern Realms,Crinfrid Reaver's Dragon Hunter,5,unit
-Northern Realms,Kaedweni Siege Expert,1,unit
-Northern Realms,Dun Banner Medic,5,unit
-Northern Realms,Ballista,6,unit
-Northern Realms,Trebuchet,6,unit
-Northern Realms,Vernon Roche,10,unit
-Northern Realms,John Natalis,10,unit
-Northern Realms,Prince Stennis,5,spy
+faction,name,power,kind,row
+Northern Realms,Redanian Foot Soldier,1,unit,melee
+Northern Realms,Poor Fucking Infantry,1,unit,melee
+Northern Realms,Blue Stripes Commando,4,unit,melee
+Northern Realms,Siegfried of Denesle,5,unit,melee
+Northern Realms,Ves,5,unit,ranged
+Northern Realms,Sheldon Skaggs,4,unit,ranged
+Northern Realms,Sabrina Glevissig,4,unit,ranged
+Northern Realms,Crinfrid Reaver's Dragon Hunter,5,unit,ranged
+Northern Realms,Kaedweni Siege Expert,1,unit,siege
+Northern Realms,Dun Banner Medic,5,unit,siege
+Northern Realms,Ballista,6,unit,siege
+Northern Realms,Trebuchet,6,unit,siege
+Northern Realms,Vernon Roche,10,unit,melee
+Northern Realms,John Natalis,10,unit,melee
+Northern Realms,Prince Stennis,5,spy,melee
 
-Nilfgaard,Sweers,2,unit
-Nilfgaard,Nausicaa Cavalry Rider,2,unit
-Nilfgaard,Vreemde,2,unit
-Nilfgaard,Rotten Mangonel,3,unit
-Nilfgaard,Young Emissary,4,unit
-Nilfgaard,Vattier de Rideaux,4,unit
-Nilfgaard,Yennefer of Vengerberg,7,unit
-Nilfgaard,Black Infantry Archer,4,unit
-Nilfgaard,Gaunter O'Dimm: Darkness,4,unit
-Nilfgaard,Nilfgaardian Archer,5,unit
-Nilfgaard,Siege Engineer,4,unit
-Nilfgaard,Trebuchet,6,unit
-Nilfgaard,Heavy Zerrikanian Fire Scorpion,10,unit
-Nilfgaard,Menno Coehoorn,10,unit
-Nilfgaard,Emissary,4,spy
+Nilfgaard,Sweers,2,unit,melee
+Nilfgaard,Nausicaa Cavalry Rider,2,unit,melee
+Nilfgaard,Vreemde,2,unit,melee
+Nilfgaard,Rotten Mangonel,3,unit,siege
+Nilfgaard,Young Emissary,4,unit,melee
+Nilfgaard,Vattier de Rideaux,4,unit,ranged
+Nilfgaard,Yennefer of Vengerberg,7,unit,ranged
+Nilfgaard,Black Infantry Archer,4,unit,ranged
+Nilfgaard,Gaunter O'Dimm: Darkness,4,unit,ranged
+Nilfgaard,Nilfgaardian Archer,5,unit,ranged
+Nilfgaard,Siege Engineer,4,unit,siege
+Nilfgaard,Trebuchet,6,unit,siege
+Nilfgaard,Heavy Zerrikanian Fire Scorpion,10,unit,siege
+Nilfgaard,Menno Coehoorn,10,unit,melee
+Nilfgaard,Emissary,4,spy,melee

@@ -2,32 +2,91 @@ use std::error::Error;
 use std::fs::File;
 use std::path::Path;
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum PlayerId {
-    One,
-    Two,
+pub type CardId = u32;
+
+#[derive(Copy, Clone, Debug)]
+pub enum Row {
+    Melee,
+    Ranged,
+    Siege,
 }
 
-pub type CardId = u32;
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum CardKind {
+    Unit,
+    Spy,
+    // plus tard: Weather, Buff, Hero...
+}
 
 #[derive(Clone, Debug)]
 pub struct Card {
     pub id: CardId,
     pub name: String,
     pub power: u8,
-    pub is_spy: bool,
+    pub kind: CardKind,
+    pub row: Row,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum PlayerId {
+    One,
+    Two,
+}
+
+#[derive(Clone, Debug)]
+pub struct Board {
+    pub melee: Vec<Card>,
+    pub ranged: Vec<Card>,
+    pub siege: Vec<Card>,
+}
+
+impl Board {
+    pub fn new() -> Self {
+        Self {
+            melee: Vec::new(),
+            ranged: Vec::new(),
+            siege: Vec::new(),
+        }
+    }
+
+    pub fn total_power(&self) -> u32 {
+        self.melee
+            .iter()
+            .chain(self.ranged.iter())
+            .chain(self.siege.iter())
+            .map(|c| c.power as u32)
+            .sum()
+    }
+
+    pub fn push_card(&mut self, card: Card) {
+        match card.row {
+            Row::Melee => self.melee.push(card),
+            Row::Ranged => self.ranged.push(card),
+            Row::Siege => self.siege.push(card),
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.melee.clear();
+        self.ranged.clear();
+        self.siege.clear();
+    }
 }
 
 #[derive(Clone, Debug)]
 pub struct PlayerState {
     pub deck: Vec<Card>,
     pub hand: Vec<Card>,
-    pub board: Vec<Card>,
+    pub board: Board,
     pub passed: bool,
     pub rounds_won: u8,
 }
 
 impl PlayerState {
+    pub fn total_power(&self) -> u32 {
+        self.board.total_power()
+    }
+
     pub fn draw(&mut self, n: usize) {
         for _ in 0..n {
             if let Some(card) = self.deck.pop() {
@@ -41,9 +100,9 @@ impl PlayerState {
 
 #[derive(Clone, Debug)]
 pub struct GameState {
-    pub current_player: PlayerId,
     pub player1: PlayerState,
     pub player2: PlayerState,
+    pub current_player: PlayerId,
     pub round: u8,
     pub finished: bool,
 }
@@ -59,41 +118,39 @@ impl GameState {
         let mut p1 = PlayerState {
             deck: deck1,
             hand: Vec::new(),
-            board: Vec::new(),
+            board: Board::new(),
             passed: false,
             rounds_won: 0,
         };
-
         let mut p2 = PlayerState {
             deck: deck2,
             hand: Vec::new(),
-            board: Vec::new(),
+            board: Board::new(),
             passed: false,
             rounds_won: 0,
         };
 
-        p1.draw(10);
-        p2.draw(10);
+        p1.draw(7);
+        p2.draw(7);
 
         Self {
-            current_player: PlayerId::One,
             player1: p1,
             player2: p2,
+            current_player: PlayerId::One,
             round: 1,
             finished: false,
         }
     }
 
-    pub fn total_power(&self, player: PlayerId) -> u32 {
-        let p = match player {
-            PlayerId::One => &self.player1,
-            PlayerId::Two => &self.player2,
-        };
-        p.board.iter().map(|c| c.power as u32).sum()
+    pub fn total_power(&self, id: PlayerId) -> u32 {
+        match id {
+            PlayerId::One => self.player1.total_power(),
+            PlayerId::Two => self.player2.total_power(),
+        }
     }
 
-    pub fn rounds_won(&self, player: PlayerId) -> u8 {
-        match player {
+    pub fn rounds_won(&self, id: PlayerId) -> u8 {
+        match id {
             PlayerId::One => self.player1.rounds_won,
             PlayerId::Two => self.player2.rounds_won,
         }
@@ -125,7 +182,8 @@ impl GameState {
             return Vec::new();
         }
 
-        let mut actions: Vec<Action> = player.hand.iter().map(|c| Action::PlayCard(c.id)).collect();
+        let mut actions: Vec<Action> =
+            player.hand.iter().map(|c| Action::PlayCard(c.id)).collect();
 
         actions.push(Action::Pass);
         actions
@@ -145,11 +203,15 @@ impl GameState {
 
                 if let Some(pos) = me.hand.iter().position(|c| c.id == id) {
                     let card = me.hand.remove(pos);
-                    if card.is_spy {
-                        other.board.push(card);
-                        me.draw(2);
-                    } else {
-                        me.board.push(card);
+                    match card.kind {
+                        CardKind::Spy => {
+                            // espion : va sur le board adverse, te fait piocher 2 cartes
+                            other.board.push_card(card);
+                            me.draw(2);
+                        }
+                        CardKind::Unit => {
+                            me.board.push_card(card);
+                        }
                     }
                 }
             }
@@ -209,7 +271,7 @@ impl GameState {
     }
 }
 
-/// Charge un deck depuis un CSV faction,name,power,kind
+/// Charge un deck depuis un CSV faction,name,power,kind,row
 pub fn load_deck_from_csv<P: AsRef<Path>>(
     path: P,
     faction: &str,
@@ -226,20 +288,30 @@ pub fn load_deck_from_csv<P: AsRef<Path>>(
         let rec_faction = record.get(0).unwrap_or("").trim();
         let name = record.get(1).unwrap_or("").trim();
         let power_str = record.get(2).unwrap_or("0").trim();
-        let kind = record.get(3).unwrap_or("unit").trim();
+        let kind_str = record.get(3).unwrap_or("unit").trim();
+        let row_str = record.get(4).unwrap_or("melee").trim();
 
         if rec_faction != faction {
             continue;
         }
 
         let power: u8 = power_str.parse().unwrap_or(0);
-        let is_spy = kind.eq_ignore_ascii_case("spy");
+        let kind = match kind_str.to_ascii_lowercase().as_str() {
+            "spy" => CardKind::Spy,
+            _ => CardKind::Unit,
+        };
+        let row = match row_str.to_ascii_lowercase().as_str() {
+            "ranged" => Row::Ranged,
+            "siege" => Row::Siege,
+            _ => Row::Melee,
+        };
 
         cards.push(Card {
             id: next_id,
             name: name.to_string(),
             power,
-            is_spy,
+            kind,
+            row,
         });
 
         next_id += 1;

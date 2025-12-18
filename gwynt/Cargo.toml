@@ -3,3 +3,4 @@ members = [
     "crates/gwynt_core",
     "crates/gwynt_UI",
 ]
+resolver = "2"

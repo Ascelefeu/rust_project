@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use gwynt_core::*;
+use gwynt_core::{self, Action, Card, CardId, GameState, PlayerId, Board};
 use rand::seq::SliceRandom;
 
 const RESET: &str = "\x1b[0m";
@@ -20,8 +20,8 @@ fn main() {
     let name2 = input_string("Nom du joueur 2: ");
 
     // Charger les deux decks (Northern / Nilfgaard)
-    let deck_nr = northern_realms_deck().unwrap();
-    let deck_nilf = nilfgaard_deck().unwrap();
+    let deck_nr = gwynt_core::northern_realms_deck().unwrap();
+    let deck_nilf = gwynt_core::nilfgaard_deck().unwrap();
 
     // Tirage au sort : qui joue quel deck ?
     let mut choices = [("Northern Realms", deck_nr), ("Nilfgaard", deck_nilf)];
@@ -57,26 +57,33 @@ fn main() {
         if actions.is_empty() {
             println!("Aucune action possible (joueur a passé ou n'a plus de cartes).");
             pause();
-            // Pour simplifier, on arrête la partie ici.
             break;
         }
 
         println!("\nActions :");
-for (i, a) in actions.iter().enumerate() {
-    match a {
-        Action::PlayCard(id) => {
-            let card = find_card_in_hand(&game, *id).unwrap();
-            println!("  [{}] Jouer {}", i, render_card(card));
+        for (i, a) in actions.iter().enumerate() {
+            match a {
+                Action::PlayCard(id) => {
+                    let card = find_card_in_hand(&game, *id).unwrap();
+                    println!("  [{}] Jouer {}", i, render_card(card));
+                }
+                Action::Pass => println!("  [{}] Passer", i),
+            }
         }
-        Action::Pass => println!("  [{}] Passer", i),
-    }
-}
-
 
         let choice = input_usize("> ");
         if let Some(action) = actions.get(choice).cloned() {
             animate_action(&action);
             game.apply_action(action);
+            println!("\nRésumé :");
+            println!(
+                "  Scores -> {}: {} | {}: {}",
+                name1,
+                game.total_power(PlayerId::One),
+                name2,
+                game.total_power(PlayerId::Two),
+            );
+            pause();
         } else {
             println!("Choix invalide.");
             pause();
@@ -122,40 +129,66 @@ fn current_player_name(game: &GameState, name1: &str, name2: &str) -> String {
 fn print_board(game: &GameState, name1: &str, name2: &str) {
     println!("\n{BOLD}PLATEAU{RESET}");
 
-    show_player(
+    show_player_lines(
         name1,
         &game.player1.board,
         game.total_power(PlayerId::One),
     );
-    show_player(
+    show_player_lines(
         name2,
         &game.player2.board,
         game.total_power(PlayerId::Two),
     );
 }
 
-fn show_player(label: &str, board: &[Card], total: u32) {
-    print!("{BOLD}{} ({}) :{RESET} ", label, total);
-    if board.is_empty() {
-        println!("—");
+fn show_player_lines(label: &str, board: &Board, total: u32) {
+    println!("{BOLD}{} ({}) :{RESET}", label, total);
+
+    println!("  Mêlée  : {}", render_line(&board.melee));
+    println!("  Tir    : {}", render_line(&board.ranged));
+    println!("  Siège  : {}", render_line(&board.siege));
+}
+
+fn render_line(cards: &[Card]) -> String {
+    if cards.is_empty() {
+        "—".to_string()
     } else {
-        for c in board {
-            print!("{} ", render_card(c));
-        }
-        println!();
+        cards.iter().map(render_card).collect::<Vec<_>>().join(" ")
     }
 }
 
 fn render_card(card: &Card) -> String {
-    let color = if card.is_spy { RED } else { GREEN };
-    let tags = if card.is_spy { " ESPION" } else { "" };
+    // Emoji selon le type de carte
+    let type_emoji = match card.kind {
+        gwynt_core::CardKind::Spy => "🕵️",   // espion
+        gwynt_core::CardKind::Unit => "⚔️", // unité simple
+    };
+
+    // Emoji selon la ligne
+    let row_emoji = match card.row {
+        gwynt_core::Row::Melee => "🗡️",   // mêlée
+        gwynt_core::Row::Ranged => "🏹",  // tir
+        gwynt_core::Row::Siege => "🏰",   // siège
+    };
+
+    let color = if matches!(card.kind, gwynt_core::CardKind::Spy) {
+        RED
+    } else {
+        GREEN
+    };
+
+    // Note l’espace entre les deux emojis: "{} {}"
     format!(
-        "{color}[{}:{}{}]{RESET}",
+        "{color}[{} {} {}:{}]{RESET}",
+        type_emoji,
+        row_emoji,
         card.name,
         card.power,
-        tags,
     )
 }
+
+
+
 
 fn print_hand(game: &GameState, name1: &str, name2: &str) {
     let (player, label) = match game.current_player {
