@@ -1,3 +1,7 @@
+use std::error::Error;
+use std::fs::File;
+use std::path::Path;
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum PlayerId {
     One,
@@ -67,6 +71,7 @@ impl GameState {
             rounds_won: 0,
         };
 
+        // pioche initiale
         p1.draw(10);
         p2.draw(10);
 
@@ -190,8 +195,7 @@ impl GameState {
         match p1_score.cmp(&p2_score) {
             Ordering::Greater => self.player1.rounds_won += 1,
             Ordering::Less => self.player2.rounds_won += 1,
-            Ordering::Equal => {
-            }
+            Ordering::Equal => { /* égalité : personne ne gagne */ }
         }
 
         match self.round {
@@ -220,22 +224,46 @@ impl GameState {
     }
 }
 
-pub fn example_deck1() -> Vec<Card> {
-    (0..10)
-        .map(|i| Card {
-            id: i,
-            name: format!("Soldat A{}", i),
-            power: 3,
-        })
-        .collect()
+/// Charge un deck depuis un CSV faction,name,power
+pub fn load_deck_from_csv<P: AsRef<Path>>(
+    path: P,
+    faction: &str,
+    starting_id: CardId,
+) -> Result<Vec<Card>, Box<dyn Error>> {
+    let file = File::open(path)?;
+    let mut rdr = csv::Reader::from_reader(file);
+
+    let mut cards = Vec::new();
+    let mut next_id = starting_id;
+
+    for result in rdr.records() {
+        let record = result?;
+        let rec_faction = record.get(0).unwrap_or("").trim();
+        let name = record.get(1).unwrap_or("").trim();
+        let power_str = record.get(2).unwrap_or("0").trim();
+
+        if rec_faction != faction {
+            continue;
+        }
+
+        let power: u8 = power_str.parse().unwrap_or(0);
+
+        cards.push(Card {
+            id: next_id,
+            name: name.to_string(),
+            power,
+        });
+
+        next_id += 1;
+    }
+
+    Ok(cards)
 }
 
-pub fn example_deck2() -> Vec<Card> {
-    (100..110)
-        .map(|i| Card {
-            id: i,
-            name: format!("Soldat B{}", i),
-            power: 4,
-        })
-        .collect()
+pub fn northern_realms_deck() -> Result<Vec<Card>, Box<dyn Error>> {
+    load_deck_from_csv("data/decks.csv", "Northern Realms", 0)
+}
+
+pub fn nilfgaard_deck() -> Result<Vec<Card>, Box<dyn Error>> {
+    load_deck_from_csv("data/decks.csv", "Nilfgaard", 1000)
 }

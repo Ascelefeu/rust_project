@@ -1,10 +1,16 @@
 use std::io::{self, Write};
 
-use gwynt_core::{example_deck1, example_deck2, Action, GameState, PlayerId};
+use gwynt_core::{
+    northern_realms_deck,
+    nilfgaard_deck,
+    Action,
+    GameState,
+    PlayerId,
+};
 
 fn main() {
-    let deck1 = example_deck1();
-    let deck2 = example_deck2();
+    let deck1 = northern_realms_deck().expect("Erreur chargement deck Northern Realms");
+    let deck2 = nilfgaard_deck().expect("Erreur chargement deck Nilfgaard");
 
     let mut game = GameState::new_with_decks(deck1, deck2);
 
@@ -12,7 +18,8 @@ fn main() {
 
     while !game.is_finished() {
         println!("\n--- Manche {} ---", game.round);
-        println!("Score manches : P1={} | P2={}",
+        println!(
+            "Score manches : P1={} | P2={}",
             game.rounds_won(PlayerId::One),
             game.rounds_won(PlayerId::Two),
         );
@@ -77,14 +84,18 @@ fn print_player_view(game: &GameState, player: PlayerId) {
         Two => (&game.player2, &game.player1),
     };
 
-    println!("Votre board (puissance totale = {}):",
-        game.total_power(player));
+    println!(
+        "Votre board (puissance totale = {}):",
+        game.total_power(player)
+    );
     for card in &me.board {
         println!("  - {} (id {}, power {})", card.name, card.id, card.power);
     }
 
-    println!("Board adverse (puissance totale = {}):",
-        game.total_power(if matches!(player, One) { Two } else { One }));
+    println!(
+        "Board adverse (puissance totale = {}):",
+        game.total_power(if matches!(player, One) { Two } else { One })
+    );
     for card in &other.board {
         println!("  - {} (id {}, power {})", card.name, card.id, card.power);
     }
