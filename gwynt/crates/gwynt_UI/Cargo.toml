@@ -1,0 +1,7 @@
+[package]
+name = "gwynt_UI"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gwynt_core = { path = "../gwynt_core" }

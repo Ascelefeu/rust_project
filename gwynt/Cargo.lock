@@ -3,5 +3,12 @@
 version = 4
 
 [[package]]
-name = "gwynt"
+name = "gwynt_UI"
+version = "0.1.0"
+dependencies = [
+ "gwynt_core",
+]
+
+[[package]]
+name = "gwynt_core"
 version = "0.1.0"
