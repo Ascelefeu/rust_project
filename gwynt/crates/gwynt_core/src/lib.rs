@@ -151,7 +151,6 @@ impl GameState {
 
         match action {
             Action::PlayCard(card_id) => {
-                // déterminer le joueur actif et l’adversaire
                 let (me, other) = match self.current_player {
                     PlayerId::One => (&mut self.player1, &mut self.player2),
                     PlayerId::Two => (&mut self.player2, &mut self.player1),
@@ -161,11 +160,9 @@ impl GameState {
                     let card = me.hand.remove(pos);
 
                     if card.is_spy {
-                        // espion : va sur le board adverse et on pioche 2 cartes
                         other.board.push(card);
                         me.draw(2);
                     } else {
-                        // carte normale : va sur notre board
                         me.board.push(card);
                     }
                 } else {
@@ -234,7 +231,6 @@ impl GameState {
     }
 }
 
-/// Charge un deck depuis un CSV faction,name,power,kind
 pub fn load_deck_from_csv<P: AsRef<Path>>(
     path: P,
     faction: &str,
