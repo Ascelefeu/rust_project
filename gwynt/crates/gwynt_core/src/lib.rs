@@ -15,6 +15,7 @@ pub struct Card {
     pub id: CardId,
     pub name: String,
     pub power: u8,
+    pub is_spy: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -150,24 +151,33 @@ impl GameState {
 
         match action {
             Action::PlayCard(card_id) => {
-                let player_state = match self.current_player {
-                    PlayerId::One => &mut self.player1,
-                    PlayerId::Two => &mut self.player2,
+                // déterminer le joueur actif et l’adversaire
+                let (me, other) = match self.current_player {
+                    PlayerId::One => (&mut self.player1, &mut self.player2),
+                    PlayerId::Two => (&mut self.player2, &mut self.player1),
                 };
 
-                if let Some(pos) = player_state.hand.iter().position(|c| c.id == card_id) {
-                    let card = player_state.hand.remove(pos);
-                    player_state.board.push(card);
+                if let Some(pos) = me.hand.iter().position(|c| c.id == card_id) {
+                    let card = me.hand.remove(pos);
+
+                    if card.is_spy {
+                        // espion : va sur le board adverse et on pioche 2 cartes
+                        other.board.push(card);
+                        me.draw(2);
+                    } else {
+                        // carte normale : va sur notre board
+                        me.board.push(card);
+                    }
                 } else {
                     return;
                 }
             }
             Action::Pass => {
-                let player_state = match self.current_player {
+                let me = match self.current_player {
                     PlayerId::One => &mut self.player1,
                     PlayerId::Two => &mut self.player2,
                 };
-                player_state.passed = true;
+                me.passed = true;
             }
         }
 
@@ -224,7 +234,7 @@ impl GameState {
     }
 }
 
-/// Charge un deck depuis un CSV faction,name,power
+/// Charge un deck depuis un CSV faction,name,power,kind
 pub fn load_deck_from_csv<P: AsRef<Path>>(
     path: P,
     faction: &str,
@@ -241,17 +251,20 @@ pub fn load_deck_from_csv<P: AsRef<Path>>(
         let rec_faction = record.get(0).unwrap_or("").trim();
         let name = record.get(1).unwrap_or("").trim();
         let power_str = record.get(2).unwrap_or("0").trim();
+        let kind = record.get(3).unwrap_or("unit").trim();
 
         if rec_faction != faction {
             continue;
         }
 
         let power: u8 = power_str.parse().unwrap_or(0);
+        let is_spy = kind.eq_ignore_ascii_case("spy");
 
         cards.push(Card {
             id: next_id,
             name: name.to_string(),
             power,
+            is_spy,
         });
 
         next_id += 1;

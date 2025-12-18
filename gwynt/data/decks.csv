@@ -1,30 +1,32 @@
-faction,name,power
-Northern Realms,Redanian Foot Soldier,1
-Northern Realms,Poor Fucking Infantry,1
-Northern Realms,Blue Stripes Commando,4
-Northern Realms,Siegfried of Denesle,5
-Northern Realms,Ves,5
-Northern Realms,Sheldon Skaggs,4
-Northern Realms,Sabrina Glevissig,4
-Northern Realms,Crinfrid Reaver's Dragon Hunter,5
-Northern Realms,Kaedweni Siege Expert,1
-Northern Realms,Dun Banner Medic,5
-Northern Realms,Ballista,6
-Northern Realms,Trebuchet,6
-Northern Realms,Vernon Roche,10
-Northern Realms,John Natalis,10
+faction,name,power,kind
+Northern Realms,Redanian Foot Soldier,1,unit
+Northern Realms,Poor Fucking Infantry,1,unit
+Northern Realms,Blue Stripes Commando,4,unit
+Northern Realms,Siegfried of Denesle,5,unit
+Northern Realms,Ves,5,unit
+Northern Realms,Sheldon Skaggs,4,unit
+Northern Realms,Sabrina Glevissig,4,unit
+Northern Realms,Crinfrid Reaver's Dragon Hunter,5,unit
+Northern Realms,Kaedweni Siege Expert,1,unit
+Northern Realms,Dun Banner Medic,5,unit
+Northern Realms,Ballista,6,unit
+Northern Realms,Trebuchet,6,unit
+Northern Realms,Vernon Roche,10,unit
+Northern Realms,John Natalis,10,unit
+Northern Realms,Prince Stennis,5,spy
 
-Nilfgaard,Sweers,2
-Nilfgaard,Nausicaa Cavalry Rider,2
-Nilfgaard,Vreemde,2
-Nilfgaard,Rotten Mangonel,3
-Nilfgaard,Young Emissary,4
-Nilfgaard,Vattier de Rideaux,4
-Nilfgaard,Yennefer of Vengerberg,7
-Nilfgaard,Black Infantry Archer,4
-Nilfgaard,Gaunter O'Dimm: Darkness,4
-Nilfgaard,Nilfgaardian Archer,5
-Nilfgaard,Siege Engineer,4
-Nilfgaard,Trebuchet,6
-Nilfgaard,Heavy Zerrikanian Fire Scorpion,10
-Nilfgaard,Menno Coehoorn,10
+Nilfgaard,Sweers,2,unit
+Nilfgaard,Nausicaa Cavalry Rider,2,unit
+Nilfgaard,Vreemde,2,unit
+Nilfgaard,Rotten Mangonel,3,unit
+Nilfgaard,Young Emissary,4,unit
+Nilfgaard,Vattier de Rideaux,4,unit
+Nilfgaard,Yennefer of Vengerberg,7,unit
+Nilfgaard,Black Infantry Archer,4,unit
+Nilfgaard,Gaunter O'Dimm: Darkness,4,unit
+Nilfgaard,Nilfgaardian Archer,5,unit
+Nilfgaard,Siege Engineer,4,unit
+Nilfgaard,Trebuchet,6,unit
+Nilfgaard,Heavy Zerrikanian Fire Scorpion,10,unit
+Nilfgaard,Menno Coehoorn,10,unit
+Nilfgaard,Emissary,4,spy
