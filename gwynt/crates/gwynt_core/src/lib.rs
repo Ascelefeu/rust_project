@@ -55,7 +55,7 @@ pub enum Action {
 }
 
 impl GameState {
-    pub fn new_with_decks(deck1: Vec<Card>, deck2: Vec<Card>) -> GameState {
+    pub fn new_with_decks(deck1: Vec<Card>, deck2: Vec<Card>) -> Self {
         let mut p1 = PlayerState {
             deck: deck1,
             hand: Vec::new(),
@@ -72,31 +72,15 @@ impl GameState {
             rounds_won: 0,
         };
 
-        // pioche initiale
         p1.draw(10);
         p2.draw(10);
 
-        GameState {
+        Self {
             current_player: PlayerId::One,
             player1: p1,
             player2: p2,
             round: 1,
             finished: false,
-        }
-    }
-
-    pub fn current_player(&self) -> PlayerId {
-        self.current_player
-    }
-
-    pub fn is_finished(&self) -> bool {
-        self.finished
-    }
-
-    pub fn rounds_won(&self, player: PlayerId) -> u8 {
-        match player {
-            PlayerId::One => self.player1.rounds_won,
-            PlayerId::Two => self.player2.rounds_won,
         }
     }
 
@@ -108,10 +92,18 @@ impl GameState {
         p.board.iter().map(|c| c.power as u32).sum()
     }
 
+    pub fn rounds_won(&self, player: PlayerId) -> u8 {
+        match player {
+            PlayerId::One => self.player1.rounds_won,
+            PlayerId::Two => self.player2.rounds_won,
+        }
+    }
+
     pub fn winner(&self) -> Option<PlayerId> {
         if !self.finished {
             return None;
         }
+
         match self.player1.rounds_won.cmp(&self.player2.rounds_won) {
             std::cmp::Ordering::Greater => Some(PlayerId::One),
             std::cmp::Ordering::Less => Some(PlayerId::Two),
@@ -133,14 +125,9 @@ impl GameState {
             return Vec::new();
         }
 
-        let mut actions: Vec<Action> = player
-            .hand
-            .iter()
-            .map(|c| Action::PlayCard(c.id))
-            .collect();
+        let mut actions: Vec<Action> = player.hand.iter().map(|c| Action::PlayCard(c.id)).collect();
 
         actions.push(Action::Pass);
-
         actions
     }
 
@@ -150,23 +137,20 @@ impl GameState {
         }
 
         match action {
-            Action::PlayCard(card_id) => {
+            Action::PlayCard(id) => {
                 let (me, other) = match self.current_player {
                     PlayerId::One => (&mut self.player1, &mut self.player2),
                     PlayerId::Two => (&mut self.player2, &mut self.player1),
                 };
 
-                if let Some(pos) = me.hand.iter().position(|c| c.id == card_id) {
+                if let Some(pos) = me.hand.iter().position(|c| c.id == id) {
                     let card = me.hand.remove(pos);
-
                     if card.is_spy {
                         other.board.push(card);
                         me.draw(2);
                     } else {
                         me.board.push(card);
                     }
-                } else {
-                    return;
                 }
             }
             Action::Pass => {
@@ -189,32 +173,26 @@ impl GameState {
     }
 
     fn both_players_done(&self) -> bool {
-        let p1_done = self.player1.passed || self.player1.hand.is_empty();
-        let p2_done = self.player2.passed || self.player2.hand.is_empty();
-        p1_done && p2_done
+        (self.player1.passed || self.player1.hand.is_empty())
+            && (self.player2.passed || self.player2.hand.is_empty())
     }
 
     fn end_round(&mut self) {
-        let p1_score = self.total_power(PlayerId::One);
-        let p2_score = self.total_power(PlayerId::Two);
+        let p1 = self.total_power(PlayerId::One);
+        let p2 = self.total_power(PlayerId::Two);
 
-        use std::cmp::Ordering;
-        match p1_score.cmp(&p2_score) {
-            Ordering::Greater => self.player1.rounds_won += 1,
-            Ordering::Less => self.player2.rounds_won += 1,
-            Ordering::Equal => { /* égalité : personne ne gagne */ }
+        if p1 > p2 {
+            self.player1.rounds_won += 1;
+        } else if p2 > p1 {
+            self.player2.rounds_won += 1;
         }
 
-        match self.round {
-            1 => {
-                self.player1.draw(2);
-                self.player2.draw(2);
-            }
-            2 => {
-                self.player1.draw(1);
-                self.player2.draw(1);
-            }
-            _ => {}
+        if self.round == 1 {
+            self.player1.draw(2);
+            self.player2.draw(2);
+        } else if self.round == 2 {
+            self.player1.draw(1);
+            self.player2.draw(1);
         }
 
         self.player1.board.clear();
@@ -231,6 +209,7 @@ impl GameState {
     }
 }
 
+/// Charge un deck depuis un CSV faction,name,power,kind
 pub fn load_deck_from_csv<P: AsRef<Path>>(
     path: P,
     faction: &str,
