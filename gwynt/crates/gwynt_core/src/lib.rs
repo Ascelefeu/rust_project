@@ -15,10 +15,23 @@ pub struct Card {
 
 #[derive(Clone, Debug)]
 pub struct PlayerState {
+    pub deck: Vec<Card>,
     pub hand: Vec<Card>,
     pub board: Vec<Card>,
     pub passed: bool,
     pub rounds_won: u8,
+}
+
+impl PlayerState {
+    pub fn draw(&mut self, n: usize) {
+        for _ in 0..n {
+            if let Some(card) = self.deck.pop() {
+                self.hand.push(card);
+            } else {
+                break;
+            }
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -27,7 +40,7 @@ pub struct GameState {
     pub player1: PlayerState,
     pub player2: PlayerState,
     pub round: u8,
-    pub finished: bool, 
+    pub finished: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -38,20 +51,29 @@ pub enum Action {
 
 impl GameState {
     pub fn new_with_decks(deck1: Vec<Card>, deck2: Vec<Card>) -> GameState {
+        let mut p1 = PlayerState {
+            deck: deck1,
+            hand: Vec::new(),
+            board: Vec::new(),
+            passed: false,
+            rounds_won: 0,
+        };
+
+        let mut p2 = PlayerState {
+            deck: deck2,
+            hand: Vec::new(),
+            board: Vec::new(),
+            passed: false,
+            rounds_won: 0,
+        };
+
+        p1.draw(10);
+        p2.draw(10);
+
         GameState {
             current_player: PlayerId::One,
-            player1: PlayerState {
-                hand: deck1,
-                board: Vec::new(),
-                passed: false,
-                rounds_won: 0,
-            },
-            player2: PlayerState {
-                hand: deck2,
-                board: Vec::new(),
-                passed: false,
-                rounds_won: 0,
-            },
+            player1: p1,
+            player2: p2,
             round: 1,
             finished: false,
         }
@@ -101,15 +123,17 @@ impl GameState {
             PlayerId::Two => &self.player2,
         };
 
+        if player.passed {
+            return Vec::new();
+        }
+
         let mut actions: Vec<Action> = player
             .hand
             .iter()
             .map(|c| Action::PlayCard(c.id))
             .collect();
 
-        if !player.passed {
-            actions.push(Action::Pass);
-        }
+        actions.push(Action::Pass);
 
         actions
     }
@@ -168,6 +192,18 @@ impl GameState {
             Ordering::Less => self.player2.rounds_won += 1,
             Ordering::Equal => {
             }
+        }
+
+        match self.round {
+            1 => {
+                self.player1.draw(2);
+                self.player2.draw(2);
+            }
+            2 => {
+                self.player1.draw(1);
+                self.player2.draw(1);
+            }
+            _ => {}
         }
 
         self.player1.board.clear();
