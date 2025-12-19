@@ -1,3 +1,7 @@
+# Lancer le projet:
+On lance avec la commande :  cargo run -p gwynt_UI
+
+
 # Règles du jeu
 
 ## Objectif
